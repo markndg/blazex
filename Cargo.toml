@@ -1,0 +1,63 @@
+[package]
+name = "blaze-x-pack"
+version = "0.1.0"
+edition = "2021"
+authors = ["BLAZE-X Contributors"]
+description = "Model packager with stable archive format, diff/patch, and multi-format export"
+license = "Apache 2.0"
+repository = "https://github.com/blaze-x/blaze-x-pack"
+keywords = ["llm", "gguf", "safetensors", "quantization", "model"]
+categories = ["command-line-utilities", "compression", "encoding", "science"]
+build = "build.rs"
+
+
+[lib]
+name = "blaze_x_pack"
+path = "src/lib.rs"
+
+[[bin]]
+name = "blazex"
+path = "src/main.rs"
+
+[[bin]]
+name = "blazex-verify-patch"
+path = "src/bin/verify_patch.rs"
+
+[dependencies]
+# Serialisation / format
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+bincode = "1"
+
+# Hashing / verification
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+sha2 = "0.10"
+hex = "0.4"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+
+# Progress / display
+indicatif = "0.17"
+comfy-table = "6"
+
+# Memory mapping
+memmap2 = "0.9"
+
+# Byte order
+byteorder = "1"
+
+# Base64 for sidecar binary file encoding
+base64 = "0.22"
+
+# Delta patch compression
+zstd = "0.13"
+
+[dev-dependencies]
+tempfile = "=3.10.1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
