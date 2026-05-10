@@ -78,16 +78,30 @@ The patch container uses format version **2** (4-byte field after magic): a JSON
 
 ## Install
 
+You need a BlazEC shared library under `codec/` for your platform ([codec/README.md](codec/README.md), or [releases](https://github.com/blaze-x/blaze-x-pack/releases)). Without it, `cargo build` fails at `build.rs`.
+
 ```bash
 cargo install --path .
 ```
 
-Or build the release binary directly:
+Or build the release binary:
 
 ```bash
 cargo build --release
 # binary at target/release/blazex
 ```
+
+Prebuilt codec binaries from releases are meant to link and run as-is: Cargo copies the library into a build output directory and the loader resolves it via the path recorded at link time.
+
+**Locally built codec (macOS)** — If you compile `libblazec` yourself, its Mach-O **install id** often still points at `target/.../deps/libblazec.dylib` from the codec crate. At runtime that path does not exist next to `blazex`, so `dyld` aborts with “Library not loaded”. Fix the id, rebuild this crate, and expose `libblazec.dylib` beside the binary:
+
+```bash
+install_name_tool -id "@executable_path/libblazec.dylib" codec/libblazec-aarch64-apple-darwin.dylib
+cargo build --release
+ln -sf ../../codec/libblazec-aarch64-apple-darwin.dylib target/release/libblazec.dylib
+```
+
+Use the `codec/` filename that matches your target (for example `libblazec-x86_64-apple-darwin.dylib` on Intel Macs). After changing the codec file or `install_name_tool` again, rerun `cargo build --release` and refresh the symlink.
 
 ---
 
