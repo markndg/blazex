@@ -12,7 +12,7 @@ BLAZE-X solves packaging and distribution.
 
 ---
 
-## Benchmark Results
+## Benchmark Results for Diff -> Patch
  
 Tested on real base → instruct model pairs across two architectures. Patches are
 bit-perfect — SHA-256 verified against the original target after apply.
