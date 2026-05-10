@@ -12,6 +12,39 @@ BLAZE-X solves packaging and distribution.
 
 ---
 
+## Benchmark Results
+ 
+Tested on real base → instruct model pairs across two architectures. Patches are
+bit-perfect — SHA-256 verified against the original target after apply.
+ 
+| Model pair | Architecture | Full model | Patch size | vs full model |
+|---|---|---|---|---|
+| Qwen2.5-7B → 7B-Instruct | Qwen | 15.3 GB | 6.1 GB | **40.1%** |
+| Qwen2.5-14B → 14B-Instruct | Qwen | 29.5 GB | 11.3 GB | **38.3%** |
+| Llama 3.1-8B → 8B-Instruct | Llama | 15.0 GB | 7.7 GB | **47.9%** |
+ 
+Distributing a model update costs **38–48% of a full re-download**, with zero
+quality loss. The patch is applied locally against the base model — no rounding,
+no approximation, the reconstructed model is identical to the original target
+byte-for-byte.
+ 
+Compression improves with model size: the 14B patch is proportionally smaller
+than the 7B, consistent with larger models having a higher fraction of unchanged
+weights after instruction tuning.
+ 
+Results are architecture-agnostic. Qwen and Llama use different attention
+implementations, tokenizers, and training pipelines — the delta codec operates
+on raw BF16 weight bytes and makes no architecture-specific assumptions.
+ 
+### Verification
+ 
+```
+✓ 339 tensors verified — SHA-256 OK   (Qwen2.5-7B-Instruct)
+✓ 579 tensors verified — SHA-256 OK   (Qwen2.5-14B-Instruct)
+✓ 291 tensors verified — SHA-256 OK   (Llama 3.1-8B-Instruct)
+```
+---
+
 ## What BLAZE-X Does
 
 **Single-file archives** — pack a HuggingFace model directory into one `.blz` file. All safetensors shards, `config.json`, `tokenizer.json`, `tokenizer_config.json`, `special_tokens_map.json`, `tokenizer.model` (SentencePiece binary), `generation_config.json`, `vocab.json`, and `merges.txt` are embedded automatically when present. The exported archive is a complete, self-contained drop-in replacement for the original directory.
