@@ -1,18 +1,18 @@
 [package]
-name = "blaze-x-pack"
+name = "blazex"
 version = "0.1.0"
 edition = "2021"
-authors = ["BLAZE-X Contributors"]
+authors = ["BLAZEX Contributors"]
 description = "Model packager with stable archive format, diff/patch, and multi-format export"
 license = "Apache 2.0"
-repository = "https://github.com/blaze-x/blaze-x-pack"
+repository = "https://github.com/markndg/blazex"
 keywords = ["llm", "gguf", "safetensors", "quantization", "model"]
 categories = ["command-line-utilities", "compression", "encoding", "science"]
 build = "build.rs"
 
 
 [lib]
-name = "blaze_x_pack"
+name = "blazex"
 path = "src/lib.rs"
 
 [[bin]]
