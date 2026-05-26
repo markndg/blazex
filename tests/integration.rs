@@ -2,7 +2,7 @@
 ///
 /// These tests run entirely in-memory or with tempfiles — no model downloads needed.
 
-use blaze_x_pack::{
+use blazex::{
     exporter, format::{ArchiveReader, ArchiveWriter}, patch, types::DType,
 };
 use tempfile::TempDir;
@@ -217,15 +217,15 @@ fn test_export_gguf() {
         "num_attention_heads": 4,
         "vocab_size": 32000
     });
-    let mut w = blaze_x_pack::format::ArchiveWriter::new(&path, config);
+    let mut w = blazex::format::ArchiveWriter::new(&path, config);
     let raw: Vec<u8> = (0u32..512).flat_map(|i| (i as f32 * 0.01).to_le_bytes()).collect();
-    w.add_tensor("model.embed_tokens.weight", blaze_x_pack::types::DType::F32, vec![512], raw.clone());
-    w.add_tensor("lm_head.weight", blaze_x_pack::types::DType::F32, vec![512], raw.clone());
+    w.add_tensor("model.embed_tokens.weight", blazex::types::DType::F32, vec![512], raw.clone());
+    w.add_tensor("lm_head.weight", blazex::types::DType::F32, vec![512], raw.clone());
     w.finish().unwrap();
 
-    let r = blaze_x_pack::format::ArchiveReader::open(&path).unwrap();
+    let r = blazex::format::ArchiveReader::open(&path).unwrap();
     let gguf_path = dir.path().join("model.gguf");
-    let stats = blaze_x_pack::exporter::export_gguf(&r, &gguf_path, None).unwrap();
+    let stats = blazex::exporter::export_gguf(&r, &gguf_path, None).unwrap();
 
     assert!(gguf_path.exists(), "gguf file should exist");
     assert_eq!(stats.tensors, 2);
@@ -246,7 +246,7 @@ fn test_export_gguf() {
 // Cast integration tests
 // ─────────────────────────────────────────────────────────────────────────────
 
-use blaze_x_pack::cast::CastTarget;
+use blazex::cast::CastTarget;
 
 #[test]
 fn test_export_safetensors_cast_f16() {
@@ -254,7 +254,7 @@ fn test_export_safetensors_cast_f16() {
     let path = make_archive(&dir, "model.blz", &[("w", &(0..32).map(|i| i as f32 * 0.1).collect::<Vec<_>>())]);
     let r = ArchiveReader::open(&path).unwrap();
     let out = dir.path().join("out_f16");
-    let stats = blaze_x_pack::exporter::export_safetensors(&r, &out, Some(CastTarget::F16)).unwrap();
+    let stats = blazex::exporter::export_safetensors(&r, &out, Some(CastTarget::F16)).unwrap();
     // F16 is 2 bytes/element vs F32 4 bytes — output should be smaller
     assert_eq!(stats.tensors, 1);
     let st_bytes = std::fs::metadata(out.join("model.safetensors")).unwrap().len();
@@ -270,7 +270,7 @@ fn test_export_safetensors_cast_q8_0() {
     let path = make_archive(&dir, "model.blz", &[("layer", &data)]);
     let r = ArchiveReader::open(&path).unwrap();
     let out = dir.path().join("out_q8");
-    let stats = blaze_x_pack::exporter::export_safetensors(&r, &out, Some(CastTarget::Q8_0)).unwrap();
+    let stats = blazex::exporter::export_safetensors(&r, &out, Some(CastTarget::Q8_0)).unwrap();
     assert_eq!(stats.tensors, 1);
 }
 
@@ -280,14 +280,14 @@ fn test_export_gguf_cast_q8_0() {
     // Use 32-element tensors (Q8_0 block size)
     let data: Vec<f32> = (0..32).map(|i| i as f32 * 0.05 - 0.8).collect();
     let path = dir.path().join("model.blz");
-    let mut w = blaze_x_pack::format::ArchiveWriter::new(&path, serde_json::json!({"model_type":"llama"}));
+    let mut w = blazex::format::ArchiveWriter::new(&path, serde_json::json!({"model_type":"llama"}));
     let raw: Vec<u8> = data.iter().flat_map(|f| f.to_le_bytes()).collect();
-    w.add_tensor("model.embed_tokens.weight", blaze_x_pack::types::DType::F32, vec![32], raw);
+    w.add_tensor("model.embed_tokens.weight", blazex::types::DType::F32, vec![32], raw);
     w.finish().unwrap();
 
-    let r = blaze_x_pack::format::ArchiveReader::open(&path).unwrap();
+    let r = blazex::format::ArchiveReader::open(&path).unwrap();
     let gguf_path = dir.path().join("out_q8.gguf");
-    let stats = blaze_x_pack::exporter::export_gguf(&r, &gguf_path, Some(CastTarget::Q8_0)).unwrap();
+    let stats = blazex::exporter::export_gguf(&r, &gguf_path, Some(CastTarget::Q8_0)).unwrap();
     assert_eq!(stats.tensors, 1);
 
     // Verify GGUF magic and that the file is smaller than the unquantised equivalent
@@ -337,18 +337,18 @@ fn test_tokenizer_roundtrip_exact() {
 
     // Pack with tokenizer
     let raw: Vec<u8> = (0u32..4).flat_map(|i| (i as f32).to_le_bytes()).collect();
-    let mut w = blaze_x_pack::format::ArchiveWriter::new(
+        let mut w = blazex::format::ArchiveWriter::new(
         &path,
         serde_json::json!({"model_type": "gpt2"}),
     );
     w.set_tokenizer(tok_json.to_owned());
-    w.add_tensor("w", blaze_x_pack::types::DType::F32, vec![4], raw);
+    w.add_tensor("w", blazex::types::DType::F32, vec![4], raw);
     w.finish().unwrap();
 
     // Export to safetensors
-    let r = blaze_x_pack::format::ArchiveReader::open(&path).unwrap();
+    let r = blazex::format::ArchiveReader::open(&path).unwrap();
     let out_dir = dir.path().join("exported");
-    blaze_x_pack::exporter::export_safetensors(&r, &out_dir, None).unwrap();
+    blazex::exporter::export_safetensors(&r, &out_dir, None).unwrap();
 
     // Exported tokenizer.json must be byte-for-byte identical to input
     let exported = std::fs::read_to_string(out_dir.join("tokenizer.json")).unwrap();
@@ -360,7 +360,7 @@ fn test_tokenizer_roundtrip_exact() {
 fn test_create_verify_patch_fixture() {
     // Write a real .blz file to disk so blazex-verify-patch can be tested against it
     let path = std::path::PathBuf::from("/tmp/blazex_verify_test.blz");
-    let mut w = blaze_x_pack::format::ArchiveWriter::new(
+    let mut w = blazex::format::ArchiveWriter::new(
         &path,
         serde_json::json!({"model_type": "gpt2", "hidden_size": 32, "num_hidden_layers": 20}),
     );
@@ -371,13 +371,13 @@ fn test_create_verify_patch_fixture() {
             .collect();
         w.add_tensor(
             &format!("model.layers.{i}.weight"),
-            blaze_x_pack::types::DType::F32,
+            blazex::types::DType::F32,
             vec![128],
             data,
         );
     }
     let embed: Vec<u8> = (0u32..512).flat_map(|j| (j as f32).to_le_bytes()).collect();
-    w.add_tensor("model.embed_tokens.weight", blaze_x_pack::types::DType::F32, vec![512], embed);
+    w.add_tensor("model.embed_tokens.weight", blazex::types::DType::F32, vec![512], embed);
     w.finish().unwrap();
     assert!(path.exists());
     eprintln!("Fixture written to {}", path.display());
@@ -389,7 +389,7 @@ fn test_sidecar_files_roundtrip() {
     let path = dir.path().join("model.blz");
 
     // Build archive with several sidecars including a binary one
-    let mut w = blaze_x_pack::format::ArchiveWriter::new(
+    let mut w = blazex::format::ArchiveWriter::new(
         &path,
         serde_json::json!({"model_type": "llama"}),
     );
@@ -407,11 +407,11 @@ fn test_sidecar_files_roundtrip() {
     w.add_sidecar("tokenizer.model", &fake_sp_binary);
 
     let raw: Vec<u8> = (0u32..32).flat_map(|i| (i as f32).to_le_bytes()).collect();
-    w.add_tensor("w", blaze_x_pack::types::DType::F32, vec![32], raw);
+    w.add_tensor("w", blazex::types::DType::F32, vec![32], raw);
     w.finish().unwrap();
 
     // Re-open and verify sidecar metadata
-    let r = blaze_x_pack::format::ArchiveReader::open(&path).unwrap();
+    let r = blazex::format::ArchiveReader::open(&path).unwrap();
     assert_eq!(r.header.sidecar_files.len(), 4);
     let names: Vec<&str> = r.header.sidecar_files.iter().map(|s| s.filename.as_str()).collect();
     assert!(names.contains(&"tokenizer_config.json"));
@@ -419,7 +419,7 @@ fn test_sidecar_files_roundtrip() {
 
     // Export and verify all sidecar files written verbatim
     let out = dir.path().join("exported");
-    blaze_x_pack::exporter::export_safetensors(&r, &out, None).unwrap();
+        blazex::exporter::export_safetensors(&r, &out, None).unwrap();
 
     let exported_config = std::fs::read_to_string(out.join("tokenizer_config.json")).unwrap();
     assert_eq!(exported_config, tok_config);
