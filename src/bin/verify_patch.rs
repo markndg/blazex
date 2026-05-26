@@ -32,7 +32,7 @@
 //!   --verbose               Print per-tensor results
 
 use anyhow::{bail, Context, Result};
-use blaze_x_pack::{
+use blazex::{
     format::{ArchiveReader, ArchiveWriter},
     patch,
     types::DType,

@@ -1,6 +1,4 @@
 /target
-# Never commit proprietary codec source tree (see cursor_instructions.md)
-blazec-codec/
 Cargo.lock
 *.blz
 *.blzdiff
