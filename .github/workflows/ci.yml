@@ -1,0 +1,20 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Download codec
+        run: |
+          # Download libblazec from latest release
+          curl -L https://github.com/markndg/blazex/releases/latest/download/libblazec-x86_64-unknown-linux-gnu.so \
+            -o codec/libblazec-x86_64-unknown-linux-gnu.so
+      - name: Build
+        run: cargo build --release
+      - name: Test
+        run: cargo test
