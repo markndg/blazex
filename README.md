@@ -1,4 +1,5 @@
 # BLAZE-X — Model Packager
+[![CI](https://github.com/markndg/blazex/actions/workflows/ci.yml/badge.svg)](https://github.com/markndg/blazex/actions/workflows/ci.yml)
 
 A stable archive format for large language models with binary diff/patch, integrity verification, on-the-fly quantisation, and lossless export to standard formats.
 
@@ -73,6 +74,16 @@ The `.blz` format is intentionally simple and stable:
 - **No compression in the archive itself.** Compress the `.blz` file externally with zstd or lz4 if you want smaller transfers. The format stays simple.
 
 The patch container uses format version **2** (4-byte field after magic): a JSON manifest listing each tensor op (unchanged / modified / added / removed), plus a blob section. Each modified tensor’s blob is **`BLXD`-prefixed** compression (see `src/delta_patch.rs`). Format **v1** patches used raw tensor bytes only and are still supported on apply.
+
+---
+
+## BlazEC codec
+
+The SplitStream delta codec (`libblazec`) that powers the diff/patch pipeline
+is a prebuilt proprietary shared library. Prebuilt binaries for Linux x86_64,
+Windows x86_64, macOS Apple Silicon, and macOS x86_64 are included in each
+[release](https://github.com/markndg/blazex/releases). All other functionality
+— packing, verifying, exporting, GGUF conversion — is pure Rust in this repo.
 
 ---
 
