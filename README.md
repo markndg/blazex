@@ -1,5 +1,5 @@
 # BLAZE-X — Model Packager
-[![CI](https://github.com/markndg/blazex/actions/workflows/ci.yml/badge.svg)](https://github.com/markndg/blazex/actions/workflows/ci.yml)
+[![CI](https://github.com/markndg/blazex/actions/workflows/ci.yml/badge.svg)](https://github.com/markndg/blazex/actions/workflows/ci.yml) ![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
 
 A stable archive format for large language models with binary diff/patch, integrity verification, on-the-fly quantisation, and lossless export to standard formats.
 
